@@ -15,12 +15,12 @@ import String
 --MAIN
 
 
-main : Program Never String Msg
+main : Program Never Model Msg
 main =
     Html.program
         { view = view
         , update = update
-        , init = ( "Do you want to play?", initialise )
+        , init = init
         , subscriptions = \_ -> Sub.none
         }
 
@@ -35,20 +35,30 @@ type alias Model =
     , question : String
     , input : Bool
     , test : Bool
-    , error : Maybe String
+    , error : String
     }
 
 
+-- initModel : Model
+-- initModel = 
+--     Model True, "The cars", "Is it real?", True, True 
+
+optOut : Model
+optOut =
+    Model True "The cars" "Is it real?" True True  "Error"
+
+init : (Model, Cmd Msg)
+init = 
+    (optOut, Random.generate coinFlip Random.bool)
 
 --MESSAGES
 
 
 type Msg
-    = Initialise
-    | Generate
+    =   Generate
     | Pick
-    | Compare
-
+    | NewFace Int
+    -- | Compare
 
 
 --VIEW
@@ -57,8 +67,8 @@ type Msg
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ h3 [] [ text question ] ]
-        , div [] [ h3 [] [ text name ] ]
+        [ div [] [ h3 [] [ text model.question ] ]
+        , div [] [ h3 [] [ text model.name ] ]
         , button [ class "btn", onClick Generate ] [ span [] [ text "Generate new name" ] ]
         , button [ class "btn", onClick Pick ] [ span [] [ text "Pick a band" ] ]
         ]
@@ -71,33 +81,31 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Initialise ->
-            ( input, coinFlip )
+        -- Initialise ->
+        --     ( model, Random.generate coinFlip Random.bool )
 
         --and { model.question } = "Is this a real vocal group?"
         Generate ->
-            ( name, generateRandomName )
+            ( model, Random.generate NewFace (Random.int 0 3) )
 
         Pick ->
-            ( name, pickRandomName )
+            ( {model | name = pickRandomName }, Cmd.none )
 
-        Compare ->
-            if real == input then
-                test == 1
-            else
-                test == 0
+        NewFace newFace -> 
+            ( {model | name = pickBandName newFace }, Cmd.none )
+        -- Compare ->
+        --     if model.real == input then
+        --         model.test == 1
+        --     else
+        --         model.test == 0
 
 
-coinFlip : Random.Generator Flip
-coinFlip =
-    Random.map
-        (\b ->
-            if b then
-                Generate
-            else
-                Pick
-        )
-
+coinFlip : Bool -> Msg
+coinFlip b =
+    if b then
+        Generate
+    else
+        Pick
 
 capitalize : String -> String
 capitalize str =
@@ -114,7 +122,7 @@ pickPart list i =
     list
         |> Array.fromList
         |> Array.get i
-        |> Maybe.withDefault ""
+        |> Maybe.withDefault "Not Found"
 
 
 generateRandomName : Cmd Msg
@@ -124,16 +132,21 @@ generateRandomName =
         makeBand x =
             "The " ++ (pickPart Parts.parts x |> capitalize) ++ "s"
     in
-    generate Initialise
-        (Random.map makeBand (generator Parts.parts))
+    Cmd.none
+    -- generate Initialise
+    --     (Random.map makeBand (generator Parts.parts))
 
+pickBandName: Int -> String
+pickBandName i =
+    pickPart Bands.bands i
 
-pickRandomName : Cmd Msg
+pickRandomName : String
 pickRandomName =
     let
         pickBand : Int -> String
         pickBand x =
             pickPart Bands.bands x
     in
-    generate Initialise
-        (Random.map pickBand (generator Bands.bands))
+
+    "Knut"
+    -- pickPart Bands.bands (Random.generate Random.int 0 20)
