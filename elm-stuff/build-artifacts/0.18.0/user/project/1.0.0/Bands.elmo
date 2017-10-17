@@ -1,0 +1,17 @@
+var _user$project$Bands$bands = {
+	ctor: '::',
+	_0: 'The Drifters',
+	_1: {
+		ctor: '::',
+		_0: 'The Ink Spots',
+		_1: {
+			ctor: '::',
+			_0: 'The Mills Brothers',
+			_1: {
+				ctor: '::',
+				_0: 'The Boswell Sisters',
+				_1: {ctor: '[]'}
+			}
+		}
+	}
+};
